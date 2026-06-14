@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thiệp Mời Chụp Ảnh Tốt Nghiệp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Cấu hình giao diện chung --- */
+        :root {
+            --bg-color: #fcfbf7;
+            --text-color: #4a4a4a;
+            --accent-color: #b58d53; 
+            --border-color: #e6dfd3;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #999;
+            display: flex;
+            justify-content: center;
+            color: var(--text-color);
+        }
+
+        .phone-container {
+            width: 100%;
+            max-width: 450px;
+            background-color: var(--bg-color);
+            min-height: 100vh;
+            position: relative;
+            padding: 30px 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            border: 8px solid var(--border-color);
+            background-image: radial-gradient(var(--border-color) 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+
+        /* --- Nút nhạc --- */
+        .music-btn {
+            position: fixed;
+            top: 20px;
+            right: calc(50% - 200px);
+            z-index: 100;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        @media (max-width: 450px) { .music-btn { right: 20px; } }
+
+        /* --- Cấu hình ẩn/hiện nút Admin bảo mật --- */
+        .admin-toggle {
+            display: none; /* MẶC ĐỊNH ẨN: Bạn bè vào xem sẽ không bao giờ thấy nút này */
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            z-index: 100;
+            background: #c72c48;
+            color: #fff;
+            padding: 8px 12px;
+            font-size: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        
+        .edit-input {
+            display: none;
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+            border: 1px dashed var(--accent-color);
+        }
+        .editing .edit-input { display: block; }
+        .editing .editable-img { border: 3px dashed var(--accent-color); cursor: pointer; }
+
+        /* --- Bố cục giao diện nội dung thiệp mời --- */
+        .header { text-align: center; margin-bottom: 25px; }
+        .main-title { font-family: 'Dancing Script', cursive; font-size: 32px; color: var(--accent-color); line-height: 1.2; }
+        
+        .avatar-wrapper { width: 180px; height: 180px; margin: 20px auto; border-radius: 50%; border: 4px solid var(--accent-color); overflow: hidden; position: relative; }
+        .avatar-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+
+        .prefix-text { font-size: 18px; color: #888; margin-top: 15px; }
+        .name { font-family: 'Dancing Script', cursive; font-size: 36px; color: #222; margin: 5px 0; }
+        .class-tag { display: inline-block; background-color: #f0e6d6; color: #c72c48; padding: 4px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; border: 1px solid #e0d2bc; margin-bottom: 15px; }
+        .invitation-text { font-style: italic; font-size: 15px; color: #666; line-height: 1.6; padding: 0 10px; }
+
+        hr { border: 0; height: 1px; background-image: linear-gradient(to right, transparent, var(--accent-color), transparent); margin: 30px 0; }
+        .section-title { font-family: 'Dancing Script', cursive; font-size: 30px; color: var(--accent-color); text-align: center; margin-bottom: 5px; }
+        .section-subtitle { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+
+        .bubble-chat { background: #fff; border: 1px solid var(--border-color); border-radius: 15px; padding: 10px 15px; display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .bubble-avatar { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; }
+
+        /* Khung lịch */
+        .calendar-box { background: #fff; border: 1px solid var(--border-color); border-radius: 15px; padding: 15px; margin-bottom: 20px; }
+        .calendar-header { font-weight: bold; color: var(--accent-color); text-align: center; margin-bottom: 10px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; font-size: 14px; }
+        .day-name { font-weight: bold; color: #888; font-size: 12px; }
+        .day { padding: 5px 0; border-radius: 5px; }
+        .day.active { background-color: #4a67b3; color: white; font-weight: bold; }
+
+        .info-row { margin-top: 15px; font-size: 15px; }
+        .btn-maps { display: block; width: 100%; background: #c5a880; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 15px 0; text-transform: uppercase; font-size: 14px; }
+        
+        .contact-info { text-align: center; font-size: 14px; line-height: 1.8; background: #fdfaf4; padding: 10px; border-radius: 8px; border: 1px dashed var(--border-color); }
+        .contact-info a { color: #4a67b3; text-decoration: none; font-weight: bold; }
+
+        /* Album ảnh */
+        .gallery-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-top: 15px; }
+        .gallery-item { width: 100%; border-radius: 8px; object-fit: cover; border: 2px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+        .img-large { grid-column: span 2; height: 260px; }
+        .img-square { height: 140px; }
+
+        /* Form tương tác */
+        .rsvp-form { background: #fff; border: 1px solid var(--border-color); border-radius: 15px; padding: 20px; margin-top: 30px; }
+        .rsvp-form input, .rsvp-form select, .rsvp-form textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 8px; }
+        .rsvp-form button { width: 100%; background: #c5a880; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .preview-box { background: #f5f0e6; border-radius: 8px; padding: 15px; margin-top: 15px; min-height: 50px; font-size: 14px; }
+        .footer-thank { text-align: center; font-family: 'Dancing Script', cursive; font-size: 36px; color: var(--accent-color); margin: 35px 0 10px 0; }
+    </style>
+</head>
+<body>
+
+    <button class="music-btn" id="musicBtn" onclick="toggleMusic()">🎵</button>
+    <!-- Bạn có thể thay link nhạc .mp3 của bạn vào thẻ src dưới đây -->
+    <audio id="bgMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+
+    <!-- NÚT CHỈNH SỬA (Mặc định bị ẩn bằng CSS display: none) -->
+    <div class="admin-toggle" id="adminBtn" onclick="toggleAdminMode()">⚙️ Chế độ chỉnh sửa (Chủ thiệp)</div>
+
+    <div class="phone-container" id="contentDOM">
+        
+        <!-- PHẦN ĐẦU THIỆP -->
+        <div class="header">
+            <h1 class="main-title">Thiệp mời chụp ảnh<br>Tốt nghiệp</h1>
+            
+            <div class="avatar-wrapper">
+                <img id="view-avatar" class="editable-img" src="https://via.placeholder.com/180x180/e6dfd3/4a4a4a?text=Bấm+để+đổi+ảnh" onclick="triggerUpload('upload-avatar')">
+                <input type="file" id="upload-avatar" class="edit-input" accept="image/*" onchange="previewImage(this, 'view-avatar')">
+            </div>
+
+            <p class="prefix-text">▶▶ của</p>
+            <div class="name" id="text-name">Quách Thái Dương</div>
+            <input type="text" id="input-name" class="edit-input" value="Quách Thái Dương">
+            
+            <div class="class-tag" id="text-class">12C4, THPT B Hải Hậu</div>
+            <input type="text" id="input-class" class="edit-input" value="12C4, THPT B Hải Hậu">
+
+            <p class="invitation-text" id="text-invitation">"Trân trọng mời bạn, anh, chị đến tham dự lễ chụp tốt nghiệp của em, mình!"</p>
+            <textarea id="input-invitation" class="edit-input">"Trân trọng mời bạn, anh, chị đến tham dự lễ chụp tốt nghiệp của em, mình!"</textarea>
+        </div>
+
+        <hr>
+
+        <!-- THÔNG TIN THỜI GIAN & ĐỊA ĐIỂM -->
+        <div class="section-title">Thông tin</div>
+        <div class="section-subtitle">Thời gian & địa điểm</div>
+
+        <div class="bubble-chat">
+            <img id="view-subavatar" class="editable-img bubble-avatar" src="https://via.placeholder.com/50x50/e6dfd3/4a4a4a?text=Ảnh" onclick="triggerUpload('upload-subavatar')">
+            <input type="file" id="upload-subavatar" class="edit-input" accept="image/*" onchange="previewImage(this, 'view-subavatar')">
+            <div>
+                <strong id="text-bubble-greet">Xin Chào ! Mình Dương siêu đẹp trai 😜</strong>
+                <input type="text" id="input-bubble-greet" class="edit-input" value="Xin Chào ! Mình Dương siêu đẹp trai 😜">
+            </div>
+        </div>
+
+        <div class="calendar-box">
+            <div class="info-row">📅 <strong>Thời gian:</strong> <span id="text-time-str">Chủ Nhật, ngày 21/06/2026</span></div>
+            <input type="text" id="input-time-str" class="edit-input" value="Chủ Nhật, ngày 21/06/2026">
+            <br>
+            <div class="calendar-header">Tháng 6 / 2026</div>
+            <div class="calendar-grid">
+                <div class="day-name">T2</div><div class="day-name">T3</div><div class="day-name">T4</div><div class="day-name">T5</div><div class="day-name">T6</div><div class="day-name">T7</div><div class="day-name">CN</div>
+                <div class="day">1</div><div class="day">2</div><div class="day">3</div><div class="day">4</div><div class="day">5</div><div class="day">6</div><div class="day">7</div>
+                <div class="day">8</div><div class="day">9</div><div class="day">10</div><div class="day">11</div><div class="day">12</div><div class="day">13</div><div class="day">14</div>
+                <div class="day">15</div><div class="day">16</div><div class="day">17</div><div class="day">18</div><div class="day">19</div><div class="day">20</div><div class="day active">21</div>
+                <div class="day">22</div><div class="day">23</div><div class="day">24</div><div class="day">25</div><div class="day">26</div><div class="day">27</div><div class="day">28</div>
+                <div class="day">29</div><div class="day">30</div>
+            </div>
+        </div>
+
+        <div class="info-row">📍 <strong>Địa chỉ:</strong> <span id="text-location">Sân trường THPT B Hải Hậu</span></div>
+        <input type="text" id="input-location" class="edit-input" value="Sân trường THPT B Hải Hậu">
+
+        <a href="https://maps.google.com" target="_blank" class="btn-maps" id="text-maps-link">Xem chỉ đường</a>
+        <input type="text" id="input-maps-link" class="edit-input" value="https://maps.google.com">
+
+        <div class="contact-info">
+            Hotline: <strong id="text-phone">0349825843</strong> <input type="text" id="input-phone" class="edit-input" value="0349825843"><br>
+            Facebook: <a href="#" target="_blank" id="text-fb">Quach Thai Duong</a> <input type="text" id="input-fb-link" class="edit-input" value="https://facebook.com">
+        </div>
+
+        <hr>
+
+        <!-- ALBUM ẢNH KỶ NIỆM -->
+        <div class="gallery">
+            <div class="section-title">Một số ảnh về</div>
+            <div class="section-subtitle">Quá trình học tập</div>
+
+            <div class="gallery-grid">
+                <img id="view-gal1" class="gallery-item img-large editable-img" src="https://via.placeholder.com/400x250/e6dfd3/4a4a4a?text=Bấm+để+đổi+ảnh+to" onclick="triggerUpload('upload-gal1')">
+                <input type="file" id="upload-gal1" class="edit-input" accept="image/*" onchange="previewImage(this, 'view-gal1')">
+                
+                <img id="view-gal2" class="gallery-item img-square editable-img" src="https://via.placeholder.com/200x200/e6dfd3/4a4a4a?text=Đổi+ảnh+nhỏ+1" onclick="triggerUpload('upload-gal2')">
+                <input type="file" id="upload-gal2" class="edit-input" accept="image/*" onchange="previewImage(this, 'view-gal2')">
+                
+                <img id="view-gal3" class="gallery-item img-square editable-img" src="https://via.placeholder.com/200x200/e6dfd3/4a4a4a?text=Đổi+ảnh+nhỏ+2" onclick="triggerUpload('upload-gal3')">
+                <input type="file" id="upload-gal3" class="edit-input" accept="image/*" onchange="previewImage(this, 'view-gal3')">
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- FORM GỬI LỜI CHÚC -->
+        <div class="rsvp-form">
+            <div class="section-title" style="font-size:26px;">Xác nhận tham dự</div>
+            <div class="section-subtitle" style="font-size:16px;">& lời chúc</div>
+
+            <form id="wishForm" onsubmit="submitWish(event)">
+                <input type="text" id="guestName" placeholder="Tên của bạn là gì?" required>
+                <textarea id="guestMessage" placeholder="Nhập lời chúc của bạn..." rows="3" required></textarea>
+                <select id="guestStatus">
+                    <option value="">-- Bạn có tham dự không? --</option>
+                    <option value="Có">Mình sẽ đến chắc chắn!</option>
+                    <option value="Không">Rất tiếc mình không đến được</option>
+                </select>
+                <button type="submit">Gửi ngay!</button>
+            </form>
+
+            <div class="section-subtitle" style="font-size:14px; margin-top:20px; color:var(--accent-color);">Xem trước lời chúc của bạn</div>
+            <div class="preview-box" id="previewContainer">
+                <i>Lời chúc của bạn sẽ hiển thị ở đây...</i>
+            </div>
+        </div>
+
+        <div class="footer-thank">Thank you!</div>
+    </div>
+
+    <!-- LOGIC KHÓA BẢO MẬT BẰNG JAVASCRIPT -->
+    <script>
+        let isEditMode = false;
+        const audio = document.getElementById('bgMusic');
+
+        // CHÌA KHÓA BÍ MẬT: Bạn có thể đổi chữ 'duong2026' này thành bất kỳ mật khẩu nào bạn muốn
+        const SECRET_KEY = "duong2026"; 
+
+        // Hàm kiểm tra đường dẫn khi tải trang
+        function checkAdminAccess() {
+            // Lấy các tham số sau dấu hỏi (?) trên URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const accessKey = urlParams.get('admin'); // tìm từ khóa ?admin=...
+
+            // Nếu từ khóa trùng khớp với SECRET_KEY, nút chỉnh sửa mới hiện ra
+            if (accessKey === SECRET_KEY) {
+                document.getElementById('adminBtn').style.display = "block";
+            }
+        }
+
+        function toggleMusic() {
+            if (audio.paused) {
+                audio.play().catch(() => alert("Nhấp lên màn hình để kích hoạt phát nhạc!"));
+                document.getElementById('musicBtn').innerText = "⏸️";
+            } else {
+                audio.pause();
+                document.getElementById('musicBtn').innerText = "🎵";
+            }
+        }
+
+        function toggleAdminMode() {
+            isEditMode = !isEditMode;
+            const container = document.getElementById('contentDOM');
+            if (isEditMode) {
+                container.classList.add('editing');
+            } else {
+                container.classList.remove('editing');
+                saveAllData();
+                alert("Hệ thống đã lưu lại toàn bộ chỉnh sửa của bạn!");
+            }
+        }
+
+        function triggerUpload(id) {
+            if(isEditMode) document.getElementById(id).click();
+        }
+
+        function previewImage(input, imgId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById(imgId).src = e.target.result;
+                    localStorage.setItem(imgId, e.target.result);
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveAllData() {
+            const fields = ['name', 'class', 'invitation', 'bubble-greet', 'time-str', 'location', 'phone'];
+            fields.forEach(field => {
+                const val = document.getElementById(input-${field}).value;
+                document.getElementById(text-${field}).innerText = val;
+                localStorage.setItem(save-${field}, val);
+            });
+            localStorage.setItem('save-maps-link', document.getElementById('input-maps-link').value);
+            localStorage.setItem('save-fb-link', document.getElementById('input-fb-link').value);
+        }
+
+        // Chạy kiểm tra bảo mật ngay khi tải trang
+        window.onload = function() {
+            checkAdminAccess();
+
+            // Tải lại dữ liệu văn bản cũ đã lưu
+            const fields = ['name', 'class', 'invitation', 'bubble-greet', 'time-str', 'location', 'phone'];
+            fields.forEach(field => {
+                if(localStorage.getItem(save-${field})) {
+                    const savedVal = localStorage.getItem(save-${field});
+                    document.getElementById(text-${field}).innerText = savedVal;
+                    document.getElementById(input-${field}).value = savedVal;
+                }
+            });
+            
+            if(localStorage.getItem('save-maps-link')) {
+                document.getElementById('text-maps-link').href = localStorage.getItem('save-maps-link');
+                document.getElementById('input-maps-link').value = localStorage.getItem('save-maps-link');
+            }
+            if(localStorage.getItem('save-fb-link')) {
+                document.getElementById('text-fb').href = localStorage.getItem('save-fb-link');
+                document.getElementById('input-fb-link').value = localStorage.getItem('save-fb-link');
+            }
+
+            // Tải lại hình ảnh đã lưu
+            const images = ['view-avatar', 'view-subavatar', 'view-gal1', 'view-gal2', 'view-gal3'];
+            images.forEach(imgId => {
+                if(localStorage.getItem(imgId)) {
+                    document.getElementById(imgId).src = localStorage.getItem(imgId);
+                }
+            });
+        };
+
+        function submitWish(event) {
+            event.preventDefault();
+            const name = document.getElementById('guestName').value;
+            const msg = document.getElementById('guestMessage').value;
+            const status = document.getElementById('guestStatus').value;
+            document.getElementById('previewContainer').innerHTML = `
+                <strong>${name}</strong> (${status === 'Có' ? 'Sẽ tham dự' : 'Không tham dự'}): <br>
+                <i>"${msg}"</i>
+            `;
+            alert("Gửi lời chúc thành công!");
+            document.getElementById('wishForm').reset();
+        }
+    </script>
+</body>
+</html>
